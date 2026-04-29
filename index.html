@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Complaints Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --surface2: #1c1c27;
+      --border: #2a2a3d;
+      --accent: #ff4d6d;
+      --accent2: #ff8fa3;
+      --text: #e8e8f0;
+      --muted: #6b6b80;
+      --success: #00d68f;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 60px 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,77,109,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,77,109,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .glow {
+      position: fixed;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(255,77,109,0.08) 0%, transparent 70%);
+      top: -200px; left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 680px;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      margin-bottom: 48px;
+      animation: fadeDown 0.6s ease both;
+    }
+
+    .tag {
+      display: inline-block;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      padding: 4px 12px;
+      border-radius: 2px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    h1 span {
+      color: var(--accent);
+      position: relative;
+    }
+
+    h1 span::after {
+      content: '';
+      position: absolute;
+      bottom: 2px; left: 0; right: 0;
+      height: 3px;
+      background: var(--accent);
+      opacity: 0.4;
+    }
+
+    .subtitle {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .form-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 40px;
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
+
+    .field {
+      margin-bottom: 28px;
+    }
+
+    label {
+      display: block;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      padding: 14px 16px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+      appearance: none;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(255,77,109,0.1);
+    }
+
+    input::placeholder, textarea::placeholder {
+      color: var(--muted);
+      opacity: 0.6;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 140px;
+      line-height: 1.6;
+    }
+
+    select option {
+      background: var(--surface2);
+    }
+
+    .char-count {
+      text-align: right;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    .char-count.warn { color: var(--accent); }
+
+    .submit-btn {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      padding: 16px;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .submit-btn:hover:not(:disabled) {
+      background: #ff2d50;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(255,77,109,0.3);
+    }
+
+    .submit-btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .submit-btn .spinner {
+      display: none;
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto;
+    }
+
+    .submit-btn.loading .btn-text { display: none; }
+    .submit-btn.loading .spinner { display: block; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 30px; left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px 24px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+      z-index: 100;
+      white-space: nowrap;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { border-color: var(--success); color: var(--success); }
+    .toast.error { border-color: var(--accent); color: var(--accent); }
+
+    /* Complaints list */
+    .complaints-section {
+      margin-top: 48px;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .refresh-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .complaint-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 20px 24px;
+      margin-bottom: 12px;
+      transition: border-color 0.2s;
+      animation: fadeUp 0.4s ease both;
+    }
+
+    .complaint-item:hover { border-color: var(--border); }
+
+    .complaint-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .complaint-email {
+      font-size: 12px;
+      color: var(--accent2);
+    }
+
+    .complaint-category {
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 3px 10px;
+      border-radius: 2px;
+      color: var(--muted);
+    }
+
+    .complaint-text {
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text);
+      opacity: 0.85;
+    }
+
+    .complaint-date {
+      margin-top: 10px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--muted);
+      font-size: 13px;
+      border: 1px dashed var(--border);
+      border-radius: 6px;
+    }
+
+    .empty-state .icon { font-size: 32px; margin-bottom: 12px; }
+
+    .loading-state {
+      text-align: center;
+      padding: 32px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="glow"></div>
+
+  <div class="container">
+    <header>
+      <div class="tag">Support Portal</div>
+      <h1>Submit a <span>Complaint</span></h1>
+      <p class="subtitle">Having issues with our app? Let us know.<br/>We read every submission and respond within 24 hours.</p>
+    </header>
+
+    <div class="form-card">
+      <div class="field">
+        <label>Your Email Address</label>
+        <input type="email" id="email" placeholder="you@example.com" maxlength="100"/>
+      </div>
+
+      <div class="field">
+        <label>Category</label>
+        <select id="category">
+          <option value="">— Select a category —</option>
+          <option value="Bug / Crash">Bug / Crash</option>
+          <option value="Payment Issue">Payment Issue</option>
+          <option value="Account Problem">Account Problem</option>
+          <option value="Feature Request">Feature Request</option>
+          <option value="Performance">Performance</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Your Complaint</label>
+        <textarea id="complaint" placeholder="Describe your issue in detail..." maxlength="1000"></textarea>
+        <div class="char-count" id="charCount">0 / 1000</div>
+      </div>
+
+      <button class="submit-btn" id="submitBtn" onclick="submitComplaint()">
+        <span class="btn-text">Submit Complaint</span>
+        <span class="spinner"></span>
+      </button>
+    </div>
+
+    <div class="complaints-section">
+      <div class="section-header">
+        <div class="section-title">Recent Complaints</div>
+        <button class="refresh-btn" onclick="loadComplaints()">↻ Refresh</button>
+      </div>
+      <div id="complaintsList">
+        <div class="loading-state">Loading complaints...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ── CONFIG ──────────────────────────────────────────────
+    // Replace with your actual backend URL once deployed
+    const API_BASE = window.location.origin;
+    // ────────────────────────────────────────────────────────
+
+    const textarea = document.getElementById('complaint');
+    const charCount = document.getElementById('charCount');
+
+    textarea.addEventListener('input', () => {
+      const len = textarea.value.length;
+      charCount.textContent = `${len} / 1000`;
+      charCount.classList.toggle('warn', len > 800);
+    });
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = (type === 'success' ? '✓  ' : '✕  ') + msg;
+      t.className = `toast ${type} show`;
+      setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    async function submitComplaint() {
+      const email = document.getElementById('email').value.trim();
+      const category = document.getElementById('category').value;
+      const complaint = textarea.value.trim();
+
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showToast('Please enter a valid email address.', 'error'); return;
+      }
+      if (!category) {
+        showToast('Please select a category.', 'error'); return;
+      }
+      if (complaint.length < 10) {
+        showToast('Please describe your issue (min 10 characters).', 'error'); return;
+      }
+
+      const btn = document.getElementById('submitBtn');
+      btn.classList.add('loading');
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/complaints`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, category, complaint })
+        });
+
+        if (!res.ok) throw new Error(await res.text());
+
+        showToast('Complaint submitted successfully!', 'success');
+        document.getElementById('email').value = '';
+        document.getElementById('category').value = '';
+        textarea.value = '';
+        charCount.textContent = '0 / 1000';
+        loadComplaints();
+      } catch (err) {
+        showToast('Failed to submit. Please try again.', 'error');
+        console.error(err);
+      } finally {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+      }
+    }
+
+    async function loadComplaints() {
+      const list = document.getElementById('complaintsList');
+      list.innerHTML = '<div class="loading-state">Loading...</div>';
+
+      try {
+        const res = await fetch(`${API_BASE}/api/complaints`);
+        if (!res.ok) throw new Error('Failed to fetch');
+        const data = await res.json();
+
+        if (!data.length) {
+          list.innerHTML = `
+            <div class="empty-state">
+              <div class="icon">📭</div>
+              No complaints yet. Be the first to report an issue.
+            </div>`;
+          return;
+        }
+
+        list.innerHTML = data.map((c, i) => `
+          <div class="complaint-item" style="animation-delay:${i * 0.05}s">
+            <div class="complaint-meta">
+              <span class="complaint-email">${maskEmail(c.email)}</span>
+              <span class="complaint-category">${c.category || 'General'}</span>
+            </div>
+            <div class="complaint-text">${escHtml(c.complaint)}</div>
+            <div class="complaint-date">${formatDate(c.createdAt)}</div>
+          </div>
+        `).join('');
+      } catch (err) {
+        list.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div>Could not load complaints. Make sure the backend is running.</div>`;
+      }
+    }
+
+    function maskEmail(email) {
+      if (!email) return 'anonymous';
+      const [user, domain] = email.split('@');
+      return user.slice(0, 2) + '***@' + domain;
+    }
+
+    function escHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '';
+      return new Date(iso).toLocaleString('en-IN', {
+        dateStyle: 'medium', timeStyle: 'short'
+      });
+    }
+
+    loadComplaints();
+  </script>
+</body>
+</html>
