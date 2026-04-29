@@ -6,7 +6,7 @@ const app = express();
 app.use(express.json());
 app.use(express.static(__dirname)); // serves complaints.html
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://cluster0.ozmxva5.mongodb.ne=Cluster0';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://itz_prithvi8:281918@cluster0.ozmxva5.mongodb.net/helloworld?appName=Cluster0';
 const PORT = process.env.PORT || 8080;
 
 let db;
